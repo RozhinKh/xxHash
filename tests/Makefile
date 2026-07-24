@@ -53,7 +53,7 @@ include ../build/make/multiconf.make
 all: test test_alias
 
 .PHONY: test
-test: test_multiInclude test_unicode test_sanity
+test: test_multiInclude test_unicode test_sanity test_cli_seed
 
 .PHONY: test_multiInclude
 test_multiInclude:
