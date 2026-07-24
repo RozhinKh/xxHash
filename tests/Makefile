@@ -53,7 +53,7 @@ include ../build/make/multiconf.make
 all: test test_alias
 
 .PHONY: test
-test: test_multiInclude test_unicode test_sanity
+test: test_multiInclude test_unicode test_sanity test_cli_seed
 
 .PHONY: test_multiInclude
 test_multiInclude:
@@ -111,6 +111,10 @@ test_cli_comment_line: xxhsum
 .PHONY: test_cli_ignore_missing
 test_cli_ignore_missing: xxhsum
 	$(SHELL) ./cli-ignore-missing.sh
+
+.PHONY: test_cli_seed
+test_cli_seed: xxhsum
+	$(SHELL) ./cli-seed.sh
 
 .PHONY: test_sanity
 test_sanity: sanity_test.c
