@@ -112,6 +112,10 @@ test_cli_comment_line: xxhsum
 test_cli_ignore_missing: xxhsum
 	$(SHELL) ./cli-ignore-missing.sh
 
+.PHONY: test_cli_seed
+test_cli_seed: xxhsum
+	$(SHELL) ./cli-seed.sh
+
 .PHONY: test_sanity
 test_sanity: sanity_test.c
 	$(CC) $(CFLAGS) $(LDFLAGS) sanity_test.c -o sanity_test$(EXT)
