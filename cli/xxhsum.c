@@ -241,8 +241,9 @@ typedef union {
  * Reads data from `inFile`, generating an incremental hash of type hashType,
  * using `buffer` of size `blockSize` for temporary storage.
  */
-static Multihash
-XSUM_hashStream(FILE* inFile,
+static int
+XSUM_hashStream(Multihash* hashValue,
+                FILE* inFile,
                 AlgoSelected hashType,
                 void* buffer, size_t blockSize)
 {
@@ -278,8 +279,7 @@ XSUM_hashStream(FILE* inFile,
             }
         }
         if (ferror(inFile)) {
-            XSUM_log("Error: a failure occurred reading the input file.\n");
-            exit(1);
+            return 1;
     }   }
 
     {   Multihash finalHash = {0};
@@ -300,7 +300,8 @@ XSUM_hashStream(FILE* inFile,
         default:
             assert(0);
         }
-        return finalHash;
+        *hashValue = finalHash;
+        return 0;
     }
 }
 
@@ -434,7 +435,12 @@ static LineStatus XSUM_hashFile(const char* fileName,
         }
 
         /* Stream file & update hash */
-        hashValue = XSUM_hashStream(inFile, hashType, buffer, blockSize);
+        if (XSUM_hashStream(&hashValue, inFile, hashType, buffer, blockSize) != 0) {
+            XSUM_log("Error: a failure occurred reading the input file.\n");
+            fclose(inFile);
+            free(buffer);
+            return LineStatus_hashFailed;
+        }
 
         fclose(inFile);
         free(buffer);
@@ -922,7 +928,10 @@ static void XSUM_parseFile1(ParseFileArg* XSUM_parseFileArg, int rev)
                 break;
             }
             lineStatus = LineStatus_hashFailed;
-            {   Multihash const xxh = XSUM_hashStream(fp, parsedLine.algo, XSUM_parseFileArg->blockBuf, XSUM_parseFileArg->blockSize);
+            {   Multihash xxh;
+                if (XSUM_hashStream(&xxh, fp, parsedLine.algo, XSUM_parseFileArg->blockBuf, XSUM_parseFileArg->blockSize) != 0) {
+                    XSUM_log("Error: a failure occurred reading the input file.\n");
+                } else {
                 switch (parsedLine.algo)
                 {
                 case algo_xxh32:
@@ -946,6 +955,7 @@ static void XSUM_parseFile1(ParseFileArg* XSUM_parseFileArg, int rev)
 
                 default:
                     break;
+                }
                 }
             }
             if (fp != stdin) fclose(fp);
