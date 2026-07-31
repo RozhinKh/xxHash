@@ -435,7 +435,12 @@ static LineStatus XSUM_hashFile(const char* fileName,
         }
 
         /* Stream file & update hash */
-        hashValue = XSUM_hashStream(inFile, hashType, buffer, blockSize);
+        if (XSUM_hashStream(&hashValue, inFile, hashType, buffer, blockSize) != 0) {
+            XSUM_log("Error: a failure occurred reading the input file.\n");
+            fclose(inFile);
+            free(buffer);
+            return LineStatus_hashFailed;
+        }
 
         fclose(inFile);
         free(buffer);
