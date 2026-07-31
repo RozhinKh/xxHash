@@ -279,8 +279,7 @@ XSUM_hashStream(Multihash* hashValue,
             }
         }
         if (ferror(inFile)) {
-            XSUM_log("Error: a failure occurred reading the input file.\n");
-            exit(1);
+            return 1;
     }   }
 
     {   Multihash finalHash = {0};
