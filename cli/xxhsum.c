@@ -931,8 +931,7 @@ static void XSUM_parseFile1(ParseFileArg* XSUM_parseFileArg, int rev)
             {   Multihash xxh;
                 if (XSUM_hashStream(&xxh, fp, parsedLine.algo, XSUM_parseFileArg->blockBuf, XSUM_parseFileArg->blockSize) != 0) {
                     XSUM_log("Error: a failure occurred reading the input file.\n");
-                    break;
-                }
+                } else {
                 switch (parsedLine.algo)
                 {
                 case algo_xxh32:
