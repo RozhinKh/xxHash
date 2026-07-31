@@ -241,10 +241,11 @@ typedef union {
  * Reads data from `inFile`, generating an incremental hash of type hashType,
  * using `buffer` of size `blockSize` for temporary storage.
  */
-static Multihash
+static int
 XSUM_hashStream(FILE* inFile,
                 AlgoSelected hashType,
-                void* buffer, size_t blockSize)
+                void* buffer, size_t blockSize,
+                Multihash* finalHash)
 {
     XXH32_state_t state32;
     XXH64_state_t state64;
