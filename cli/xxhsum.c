@@ -925,7 +925,13 @@ static void XSUM_parseFile1(ParseFileArg* XSUM_parseFileArg, int rev)
                 break;
             }
             lineStatus = LineStatus_hashFailed;
-            {   Multihash const xxh = XSUM_hashStream(fp, parsedLine.algo, XSUM_parseFileArg->blockBuf, XSUM_parseFileArg->blockSize);
+            {   Multihash xxh;
+                if (!XSUM_hashStream(fp, parsedLine.algo, XSUM_parseFileArg->blockBuf,
+                                     XSUM_parseFileArg->blockSize, &xxh)) {
+                    lineStatus = LineStatus_failedToOpen;
+                    if (fp != stdin) fclose(fp);
+                    break;
+                }
                 switch (parsedLine.algo)
                 {
                 case algo_xxh32:
