@@ -241,10 +241,11 @@ typedef union {
  * Reads data from `inFile`, generating an incremental hash of type hashType,
  * using `buffer` of size `blockSize` for temporary storage.
  */
-static Multihash
+static int
 XSUM_hashStream(FILE* inFile,
                 AlgoSelected hashType,
-                void* buffer, size_t blockSize)
+                void* buffer, size_t blockSize,
+                Multihash* finalHash)
 {
     XXH32_state_t state32;
     XXH64_state_t state64;
@@ -277,31 +278,28 @@ XSUM_hashStream(FILE* inFile,
                 assert(0);
             }
         }
-        if (ferror(inFile)) {
-            XSUM_log("Error: a failure occurred reading the input file.\n");
-            exit(1);
-    }   }
-
-    {   Multihash finalHash = {0};
-        switch(hashType)
-        {
-        case algo_xxh32:
-            finalHash.hash32 = XXH32_digest(&state32);
-            break;
-        case algo_xxh64:
-            finalHash.hash64 = XXH64_digest(&state64);
-            break;
-        case algo_xxh128:
-            finalHash.hash128 = XXH3_128bits_digest(&state3);
-            break;
-        case algo_xxh3:
-            finalHash.hash64 = XXH3_64bits_digest(&state3);
-            break;
-        default:
-            assert(0);
-        }
-        return finalHash;
+        if (ferror(inFile)) return 0;
     }
+
+    memset(finalHash, 0, sizeof(*finalHash));
+    switch(hashType)
+    {
+    case algo_xxh32:
+        finalHash->hash32 = XXH32_digest(&state32);
+        break;
+    case algo_xxh64:
+        finalHash->hash64 = XXH64_digest(&state64);
+        break;
+    case algo_xxh128:
+        finalHash->hash128 = XXH3_128bits_digest(&state3);
+        break;
+    case algo_xxh3:
+        finalHash->hash64 = XXH3_64bits_digest(&state3);
+        break;
+    default:
+        assert(0);
+    }
+    return 1;
 }
 
                                        /* algo_xxh32, algo_xxh64, algo_xxh128 */
@@ -434,9 +432,14 @@ static LineStatus XSUM_hashFile(const char* fileName,
         }
 
         /* Stream file & update hash */
-        hashValue = XSUM_hashStream(inFile, hashType, buffer, blockSize);
+        if (!XSUM_hashStream(inFile, hashType, buffer, blockSize, &hashValue)) {
+            XSUM_log("Error: a failure occurred reading '%s'.\n", fileName);
+            if (inFile != stdin) fclose(inFile);
+            free(buffer);
+            return LineStatus_failedToOpen;
+        }
 
-        fclose(inFile);
+        if (inFile != stdin) fclose(inFile);
         free(buffer);
     }
 
@@ -922,7 +925,13 @@ static void XSUM_parseFile1(ParseFileArg* XSUM_parseFileArg, int rev)
                 break;
             }
             lineStatus = LineStatus_hashFailed;
-            {   Multihash const xxh = XSUM_hashStream(fp, parsedLine.algo, XSUM_parseFileArg->blockBuf, XSUM_parseFileArg->blockSize);
+            {   Multihash xxh;
+                if (!XSUM_hashStream(fp, parsedLine.algo, XSUM_parseFileArg->blockBuf,
+                                     XSUM_parseFileArg->blockSize, &xxh)) {
+                    lineStatus = LineStatus_failedToOpen;
+                    if (fp != stdin) fclose(fp);
+                    break;
+                }
                 switch (parsedLine.algo)
                 {
                 case algo_xxh32:
