@@ -410,11 +410,16 @@ int XSUM_benchFiles(const char* fileNamesTable[], int nbFiles)
 
             /* Fill input buffer */
             {   size_t const readSize = fread(alignedBuffer, 1, benchedSize, inFile);
+                int const readError = ferror(inFile);
                 fclose(inFile);
-                if(readSize != benchedSize) {
-                    XSUM_log("\nError: Could not read '%s': %s.\n", inFileName, strerror(errno));
+                if (readSize != benchedSize) {
+                    if (readError) {
+                        XSUM_log("\nError: Could not read '%s': %s.\n", inFileName, strerror(errno));
+                    } else {
+                        XSUM_log("\nError: Unexpected end of file while reading '%s'.\n", inFileName);
+                    }
                     free(buffer);
-                    exit(13);
+                    return 13;
             }   }
 
             /* bench */

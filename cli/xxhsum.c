@@ -1691,7 +1691,12 @@ XSUM_API int XSUM_main(int argc, const char* argv[])
         if (selectBenchIDs == 0) memcpy(g_testIDs, k_testIDs_default, (size_t)g_nbTestFunctions);
         if (selectBenchIDs == kBenchAll) memset(g_testIDs, 1, (size_t)g_nbTestFunctions);
         if (filenamesStart==0) return XSUM_benchInternal(keySize);
-        return XSUM_benchFiles(argv+filenamesStart, argc-filenamesStart);
+        {   int const benchResult = XSUM_benchFiles(argv+filenamesStart, argc-filenamesStart);
+            if (benchResult != 0) {
+                exit(benchResult);
+            }
+            return benchResult;
+        }
     }
 
     /* Check if input is defined as console; trigger an error in this case */
