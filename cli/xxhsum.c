@@ -300,7 +300,8 @@ XSUM_hashStream(Multihash* hashValue,
         default:
             assert(0);
         }
-        return finalHash;
+        *hashValue = finalHash;
+        return 0;
     }
 }
 
