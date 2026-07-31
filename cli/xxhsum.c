@@ -432,9 +432,14 @@ static LineStatus XSUM_hashFile(const char* fileName,
         }
 
         /* Stream file & update hash */
-        hashValue = XSUM_hashStream(inFile, hashType, buffer, blockSize);
+        if (!XSUM_hashStream(inFile, hashType, buffer, blockSize, &hashValue)) {
+            XSUM_log("Error: a failure occurred reading '%s'.\n", fileName);
+            if (inFile != stdin) fclose(inFile);
+            free(buffer);
+            return LineStatus_failedToOpen;
+        }
 
-        fclose(inFile);
+        if (inFile != stdin) fclose(inFile);
         free(buffer);
     }
 
