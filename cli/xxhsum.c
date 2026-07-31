@@ -278,31 +278,28 @@ XSUM_hashStream(FILE* inFile,
                 assert(0);
             }
         }
-        if (ferror(inFile)) {
-            XSUM_log("Error: a failure occurred reading the input file.\n");
-            exit(1);
-    }   }
-
-    {   Multihash finalHash = {0};
-        switch(hashType)
-        {
-        case algo_xxh32:
-            finalHash.hash32 = XXH32_digest(&state32);
-            break;
-        case algo_xxh64:
-            finalHash.hash64 = XXH64_digest(&state64);
-            break;
-        case algo_xxh128:
-            finalHash.hash128 = XXH3_128bits_digest(&state3);
-            break;
-        case algo_xxh3:
-            finalHash.hash64 = XXH3_64bits_digest(&state3);
-            break;
-        default:
-            assert(0);
-        }
-        return finalHash;
+        if (ferror(inFile)) return 0;
     }
+
+    memset(finalHash, 0, sizeof(*finalHash));
+    switch(hashType)
+    {
+    case algo_xxh32:
+        finalHash->hash32 = XXH32_digest(&state32);
+        break;
+    case algo_xxh64:
+        finalHash->hash64 = XXH64_digest(&state64);
+        break;
+    case algo_xxh128:
+        finalHash->hash128 = XXH3_128bits_digest(&state3);
+        break;
+    case algo_xxh3:
+        finalHash->hash64 = XXH3_64bits_digest(&state3);
+        break;
+    default:
+        assert(0);
+    }
+    return 1;
 }
 
                                        /* algo_xxh32, algo_xxh64, algo_xxh128 */
