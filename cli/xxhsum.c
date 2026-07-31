@@ -956,6 +956,7 @@ static void XSUM_parseFile1(ParseFileArg* XSUM_parseFileArg, int rev)
                 default:
                     break;
                 }
+                }
             }
             if (fp != stdin) fclose(fp);
         } while (0);
