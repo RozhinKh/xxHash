@@ -4879,12 +4879,26 @@ XXH3_len_129to240_64b(const xxh_u8* XXH_RESTRICT input, size_t len,
          */
         #pragma clang loop vectorize(disable)
 #endif
-        for (i=8 ; i < nbRounds; i++) {
-            /*
-             * Prevents clang for unrolling the acc loop and interleaving with this one.
-             */
-            XXH_COMPILER_GUARD(acc);
-            acc_end += XXH3_mix16B(input+(16*i), secret+(16*(i-8)) + XXH3_MIDSIZE_STARTOFFSET, seed);
+        if (nbRounds > 8) {
+            acc_end += XXH3_mix16B(input+128, secret+XXH3_MIDSIZE_STARTOFFSET, seed);
+            if (nbRounds > 9) {
+                acc_end += XXH3_mix16B(input+144, secret+16+XXH3_MIDSIZE_STARTOFFSET, seed);
+                if (nbRounds > 10) {
+                    acc_end += XXH3_mix16B(input+160, secret+32+XXH3_MIDSIZE_STARTOFFSET, seed);
+                    if (nbRounds > 11) {
+                        acc_end += XXH3_mix16B(input+176, secret+48+XXH3_MIDSIZE_STARTOFFSET, seed);
+                        if (nbRounds > 12) {
+                            acc_end += XXH3_mix16B(input+192, secret+64+XXH3_MIDSIZE_STARTOFFSET, seed);
+                            if (nbRounds > 13) {
+                                acc_end += XXH3_mix16B(input+208, secret+80+XXH3_MIDSIZE_STARTOFFSET, seed);
+                                if (nbRounds > 14) {
+                                    acc_end += XXH3_mix16B(input+224, secret+96+XXH3_MIDSIZE_STARTOFFSET, seed);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         return XXH3_avalanche(acc + acc_end);
     }
